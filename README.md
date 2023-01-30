@@ -7,8 +7,8 @@ CROSS - Refresh <br>
 SQUARE - Censored Mode <br>
 CIRCLE - Raw Values Mode <br>
 CIRCLE -Reset <br>
-LEFT - Next Page <br>
-RIGHT - Previous Page <br>
+RIGHT - Next Page <br>
+LEFT - Previous Page <br>
 DOWN - Save Report ("ux0:data/psvident.txt") <br>
 
 ## Screenshots
