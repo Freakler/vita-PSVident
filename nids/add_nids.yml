@@ -1,0 +1,21 @@
+modules:
+  SceSblSsMgr:
+    nid: 0x4E913538
+    libraries:
+      SceSblQafMgr:
+        kernel: false
+        nid: 0x756B7E89 
+        functions:
+          sceSblQafManagerGetQafNameForUser: 0x0F7EA8C2
+  SceSyscon:
+    nid: 0x5358BA05
+    libraries:
+      SceSysconForDriver:
+        kernel: true
+        nid: 0x60A35F64
+        functions:
+          ksceSysconGetTouchpanelDeviceInfo: 0xF492E69E
+          ksceSysconGetTouchpanelDeviceInfo2: 0x030D447F
+          ksceSysconGetBaryonVersion: 0xFF86F4C5
+          ksceSysconGetBaryonTimestamp: 0x4D588A0A
+          ksceSysconGetBatteryVersion: 0x68E0031E
