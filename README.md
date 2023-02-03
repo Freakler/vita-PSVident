@@ -5,7 +5,7 @@ An Application that displays various Information of your Console
 ## Controls
 CROSS - Refresh <br>
 SQUARE - Censored Mode <br>
-CIRCLE - Raw Values Mode <br>
+TRIANGLE - Raw Values Mode <br>
 CIRCLE -Reset <br>
 RIGHT - Next Page <br>
 LEFT - Previous Page <br>
