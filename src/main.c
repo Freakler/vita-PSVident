@@ -927,7 +927,8 @@ void savereport(char *file) {
 	logPrintf(file, "QA Flags: %s", getQAFlags());
 	logPrintf(file, "QA Token Name: %s", getQATokenName());
 	logPrintf(file, "Boot Flags: %s", getBootFlags());
-	logPrintf(file, "DIP Switches: %s %s", getDipSwitches(0), getDipSwitches(1));
+	logPrintf(file, "DIP Switches 0 - 127: %s", getDipSwitches(0));
+	logPrintf(file, "DIP Switches 128-255: %s", getDipSwitches(1));
 	logPrintf(file, "\n");
 	
 	

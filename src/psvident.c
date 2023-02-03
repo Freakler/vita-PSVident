@@ -276,7 +276,7 @@ char *getSerial() {
 		return error(ret, "ERROR");
 	}			
 	// Examples
-	// 0000000000003TG135F0H60070050420	// CPV-2000KD1	03-TG.. 6007005
+	// 0000000000003TG135F0H60070050420 // CPV-2000KD1	03-TG.. 6007005
 	// 00000000000000000274599200100771 // PDEL-1000	00-27.. 0100771
 	// 00000000000000000TG9B000K8200250 // DEM-3000L	00-TG.. 8200250 
 	// 00000000000032745212505300760C61 // PTEL-2002 	03-27.. 0530076
@@ -578,7 +578,7 @@ char *getDipSwitches(int print) {
 	
 	if( print == 0 ) // 0x40 to 0x4F (CPInfo 0-95, ASLR? 96-127)
 		sprintf(string, "%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X", ds[0x00], ds[0x01], ds[0x02], ds[0x03], ds[0x04], ds[0x05], ds[0x06], ds[0x07], ds[0x08], ds[0x09], ds[0x0A], ds[0x0B], ds[0x0C], ds[0x0D], ds[0x0E], ds[0x0F]);
-	if( print == 1 ) // 0x50 to 0x5F (SDK 128-159, SHELL 168-191, DEBUG 192-223, SYSTEM 224-253)
+	if( print == 1 ) // 0x50 to 0x5F (SDK 128-159, SHELL 160-191, DEBUG 192-223, SYSTEM 224-255)
 		sprintf(string, "%02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X", ds[0x10], ds[0x11], ds[0x12], ds[0x13], ds[0x14], ds[0x15], ds[0x16], ds[0x17], ds[0x18], ds[0x19], ds[0x1A], ds[0x1B], ds[0x1C], ds[0x1D], ds[0x1E], ds[0x1F]);
 	
 	return string;
@@ -1217,7 +1217,7 @@ typedef struct SceMsInfo { // size is 0x24 on FW 0.990-3.01, 0x40 on FW 3.10-3.6
 } SceMsInfo;
 **/
 
-char *getMemCardDate() { 
+char *getMemCardDate() { // Samples: https://pastebin.com/raw/VZ1MSzs1 thx cat
 	SceMsInfo info;
 	int ret = -1;
 	static char string[32];
