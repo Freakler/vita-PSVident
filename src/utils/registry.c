@@ -12,7 +12,7 @@ int getRegistryString(char *result_str, const char* reg, const char* key) { ///t
 	return sceRegMgrGetKeyStr(reg, key, result_str, 2048);  //todo sizeof result_str
 }
 
-int getRegistryBinary(char *result_str, const char* reg, const char* key) { ///type04 - binary
+int getRegistryBinary(unsigned char *result_str, const char* reg, const char* key) { ///type04 - binary
 	return sceRegMgrGetKeyBin(reg, key, result_str, 2048);  //todo sizeof result_str
 }
 

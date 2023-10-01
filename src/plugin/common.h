@@ -50,6 +50,13 @@ typedef struct SceKernelTouchpanelDeviceInfo2 {
 
 int ksceSysconGetTouchpanelDeviceInfo2(SceKernelTouchpanelDeviceInfo2 *pInfo);
 
+int (* sceSblNvsReadDataForKernel)(uint32_t offset, char *buffer, uint32_t size);
+int (* SceKernelSuspendForDriver_4DF40893)(int a1);
+int (* SceKernelSuspendForDriver_2BB92967)(int a1);
+
+//int (*module_get_export_func)(SceUID pid, const char *modname, uint32_t libnid, uint32_t funcnid, uintptr_t *func);
+int module_get_export_func(SceUID pid, const char *modname, uint32_t libnid, uint32_t funcnid, uintptr_t *func);
+
 ////////////////////////////////////////
 
 int psvident_syscon_GetTouchpanelDeviceInfo(SceKernelTouchpanelDeviceInfo *pInfo);
@@ -93,6 +100,9 @@ int k_psvident_mbr_GetEmmcSize(unsigned int *var);
 
 int psvident_sysroot_GetDipSwitches(uint8_t *string);
 int k_psvident_sysroot_GetDipSwitches(uint8_t *string);
+
+int psvident_nvs_GetKibanId(uint8_t *string);
+int k_psvident_nvs_GetKibanId(uint8_t *string);
 
 
 ////////////////////////////////////////

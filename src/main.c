@@ -4,6 +4,7 @@
 #include <psp2/io/fcntl.h>
 #include <psp2/ctrl.h>
 #include <psp2/sysmodule.h> 
+#include <psp2/rtc.h> 
 
 #include <string.h>
 #include <stdio.h> 
@@ -17,9 +18,8 @@
 #include "print/pspdebug.h"
 
 
-#define VERSION "v0.40"
+#define VERSION "v0.42"
 #define APP_PATH "ux0:app/PSVIDENT0/"
-
 
 int censored = 0;
 int nicemode = 1;
@@ -68,8 +68,10 @@ void hardware() {
 	psvDebugScreenSetTextColor(WHITE);
 	psvDebugScreenPrintf("Motherboard:");
 	psvDebugScreenSetXY(x2, y);
+	//psvDebugScreenPrintf("%s  %s", getMotherboard(), getKibanId());
 	psvDebugScreenPrintf("%s", getMotherboard());
 	y += 2;
+	
 	
 	/// DEV ///////////////////////////////////////////	
 	
@@ -90,7 +92,7 @@ void hardware() {
 	y += 1;
 	
 	
-	/// Code + Serial
+	/// Model Code + Serial
 	psvDebugScreenSetXY(x1, y);
 	psvDebugScreenSetTextColor(WHITE);
 	psvDebugScreenPrintf("Serial:");
@@ -98,12 +100,20 @@ void hardware() {
 	psvDebugScreenPrintf("%s", getSerial());
 	y += 2;
 	
+	/// Motherboard Code + Serial
+	psvDebugScreenSetXY(x1, y);
+	psvDebugScreenSetTextColor(WHITE);
+	psvDebugScreenPrintf("Board Serial:");
+	psvDebugScreenSetXY(x2, y);
+	psvDebugScreenPrintf("%s", getKibanId());
+	y += 2;
+	
 	/// MAC Address
 	psvDebugScreenSetXY(x1, y);
 	psvDebugScreenSetTextColor(WHITE);
 	psvDebugScreenPrintf("MAC Address:");
 	psvDebugScreenSetXY(x2, y);
-	psvDebugScreenPrintf("%s", getMacAddress());
+	psvDebugScreenPrintf("%s   %s", getMacAddressWifi(), getMacAddressLan());
 	y += 2;
 	
 	/// Console ID
@@ -151,10 +161,13 @@ void hardware() {
 	y += 3;
 
 
-
-
-	
-		
+	/*
+	psvDebugScreenSetXY(x1, y);
+	psvDebugScreenSetTextColor(WHITE);
+	psvDebugScreenPrintf("getTest:");
+	psvDebugScreenSetXY(x2, y);
+	psvDebugScreenPrintf("%s", getTest());
+	*/
 }
 	
 void software() {
@@ -539,6 +552,22 @@ void miscellaneous() {
 	psvDebugScreenPrintf("%s", getAutoAvls());
 	y += 2;	
 	
+	/// Refurbished
+	psvDebugScreenSetXY(x1, y);
+	psvDebugScreenSetTextColor(WHITE);
+	psvDebugScreenPrintf("Refurbished:");
+	psvDebugScreenSetXY(x2, y);
+	psvDebugScreenPrintf("%s", getRefurbished());
+	y += 2;	
+	
+	/// Real / True / Factory IDU
+	psvDebugScreenSetXY(x1, y);
+	psvDebugScreenSetTextColor(WHITE);
+	psvDebugScreenPrintf("Factory IDU:");
+	psvDebugScreenSetXY(x2, y);
+	psvDebugScreenPrintf("%s", getTrueIdu());
+	y += 2;	
+	
 	
 }
 
@@ -890,14 +919,15 @@ void savereport(char *file) {
 	logPrintf(file, "CP Board: bid. %s ver. %s", getCPBoardId(), getCPVersion());
 	}
 	logPrintf(file, "Serial: %s", getSerial());
-	logPrintf(file, "MAC Address: %s", getMacAddress());
+	logPrintf(file, "Board Serial: %s", getKibanId());
+	logPrintf(file, "MAC Address (Wifi): %s", getMacAddressWifi());
+	logPrintf(file, "MAC Address (Lan): %s", getMacAddressLan());
 	logPrintf(file, "ConsoleID: %s", getConsoleID());
 	logPrintf(file, "Hardware Info: %s", getHardwareInfo());
 	logPrintf(file, "SoC revision: %s", getSoCRevision());
 	logPrintf(file, "eMMC size: %s", getEmmcSize());
 	logPrintf(file, "Hardware Flags: %s", getHardwareFlags());
 	logPrintf(file, "\n");
-	
 	
 	
 	/// Firmware //////////////////////////////
@@ -910,7 +940,6 @@ void savereport(char *file) {
 	logPrintf(file, "SMI String 1: %s", getSmiString1(-1)); // print full string
 	logPrintf(file, "SMI String 2: %s", getSmiString2(-1)); // print full string
 	logPrintf(file, "\n");
-
 
 
 	/// Software //////////////////////////////
@@ -932,7 +961,6 @@ void savereport(char *file) {
 	logPrintf(file, "\n");
 	
 	
-	
 	/// Battery //////////////////////////////
 	logPrintf(file, "> Battery");
 	logPrintf(file, "Percentage: %s%%", getBatteryPercentage());
@@ -945,16 +973,29 @@ void savereport(char *file) {
 	logPrintf(file, "HWinfo: %s", getBatteryVersionHwinfo());
 	logPrintf(file, "FWinfo: %s", getBatteryVersionFwinfo());
 	logPrintf(file, "DFinfo: %s", getBatteryVersionDfinfo());
+	logPrintf(file, "\n");	
+	
+	
+	/// Memory Card //////////////////////////////
+	logPrintf(file, "> MemoryCard");
+	logPrintf(file, "Type: %s", getMemCardType());
+	logPrintf(file, "Size: %s", getMemCardSize());
+	logPrintf(file, "Date: %s", getMemCardDate());
+	logPrintf(file, "Read Only: %s", getMemCardReadonly());
+	logPrintf(file, "Sector Size: %s", getMemCardSectorSize());
+	logPrintf(file, "fs_offset: %s", getMemCardFsoffset());
 	logPrintf(file, "\n");
 	
 	
-	
-	/// Miscellaneous //////////////////////////////
-	logPrintf(file, "> Miscellaneous");
-	logPrintf(file, "Enter Button: %s", getEnterButton());
-	logPrintf(file, "Auto AVLS: %s", getAutoAvls());
+	/// Touchpads //////////////////////////////
+	logPrintf(file, "> Touchpads");
+	logPrintf(file, "Front Vendor ID: %s", getTouchpanelInfo(0));
+	logPrintf(file, "Front Firmware Rev: %s", getTouchpanelInfo(1));
+	logPrintf(file, "Front Config Rev: %s", getTouchpanelInfo(2));
+	logPrintf(file, "Rear VendorID: %s", getTouchpanelInfo(3));
+	logPrintf(file, "Rear Firmware Rev: %s", getTouchpanelInfo(4));
+	logPrintf(file, "Rear Config Rev: %s", getTouchpanelInfo(5));
 	logPrintf(file, "\n");
-	
 	
 	
 	/// PSN & Activation //////////////////////////////
@@ -977,31 +1018,6 @@ void savereport(char *file) {
 	logPrintf(file, "\n");
 	
 	
-	
-	/// Memory Card //////////////////////////////
-	logPrintf(file, "> MemoryCard");
-	logPrintf(file, "Type: %s", getMemCardType());
-	logPrintf(file, "Size: %s", getMemCardSize());
-	logPrintf(file, "Date: %s", getMemCardDate());
-	logPrintf(file, "Read Only: %s", getMemCardReadonly());
-	logPrintf(file, "Sector Size: %s", getMemCardSectorSize());
-	logPrintf(file, "fs_offset: %s", getMemCardFsoffset());
-	logPrintf(file, "\n");
-	
-	
-	
-	/// Touchpads //////////////////////////////
-	logPrintf(file, "> Touchpads");
-	logPrintf(file, "Front Vendor ID: %s", getTouchpanelInfo(0));
-	logPrintf(file, "Front Firmware Rev: %s", getTouchpanelInfo(1));
-	logPrintf(file, "Front Config Rev: %s", getTouchpanelInfo(2));
-	logPrintf(file, "Rear VendorID: %s", getTouchpanelInfo(3));
-	logPrintf(file, "Rear Firmware Rev: %s", getTouchpanelInfo(4));
-	logPrintf(file, "Rear Config Rev: %s", getTouchpanelInfo(5));
-	logPrintf(file, "\n");
-	
-	
-	
 	/// Wifi Profiles //////////////////////////////
 	logPrintf(file, "> Wifi Profiles");
 	for( i = 1; i < 0x1F; i++) {
@@ -1009,8 +1025,23 @@ void savereport(char *file) {
 		logPrintf(file, "SSID: %s", getWifiSSID(i));
 		logPrintf(file, "Password: %s", getWifiPassword(i));	
 	} logPrintf(file, "\n");
+		
+		
+	/// Miscellaneous //////////////////////////////
+	logPrintf(file, "> Miscellaneous");
+	logPrintf(file, "Enter Button: %s", getEnterButton());
+	logPrintf(file, "Auto AVLS: %s", getAutoAvls());
+	logPrintf(file, "Refurbished: %s", getRefurbished());
+	logPrintf(file, "\n");
 	
 	
+	
+	/////////////////////////////////////////////////
+
+	printCapabilities(file);
+	
+	printQaf(file);
+
 }
 
 void printMenu(int menu) {
@@ -1052,6 +1083,7 @@ int main(int argc, char *argv[]) {
 	SceCtrlData pad, oldpad;
 	oldpad.buttons = 0;
 	int menu = 0;
+	SceRtcTick tick, curtick;
 	static SceUID kernel_id = -1, user_id = -1;
 	
 	initNet();
@@ -1102,6 +1134,14 @@ int main(int argc, char *argv[]) {
 		if( pad.buttons != oldpad.buttons ) {
 			
 			/// update values
+			if( pad.buttons & SCE_CTRL_LTRIGGER ) {
+
+			}
+			
+			if( pad.buttons & SCE_CTRL_RTRIGGER ){
+
+			}
+			
 			if( pad.buttons & SCE_CTRL_CROSS ) {
 				printMenu(menu);
 			}
@@ -1119,7 +1159,7 @@ int main(int argc, char *argv[]) {
 			}
 			
 			/// reset
-			if( pad.buttons & SCE_CTRL_CIRCLE ) {
+			if( pad.buttons & SCE_CTRL_CIRCLE ) {			
 				menu = 0;
 				nicemode = 1;
 				censored = 0;
@@ -1138,17 +1178,31 @@ int main(int argc, char *argv[]) {
 					printMenu(--menu);
 			}
 			
-			/// save report
-			if( pad.buttons & SCE_CTRL_UP ) {
+			/// upload report
+			//if( pad.buttons & SCE_CTRL_UP ) {
 				//uploadreport(); ?!
-			}
+			//}
 			
-			/// save report
+			/// save report - stage 1
 			if( pad.buttons & SCE_CTRL_DOWN ) {
-				savereport("ux0:data/psvident.txt");
-				sendNotification("Report has been saved to ux0:data/psvident.txt");
+				sceRtcGetCurrentTick(&tick);
+				sceRtcTickAddSeconds(&tick, &tick, 3); // 3 seconds
 			}
-			
+		}
+		
+		/// save report - stage 2
+		if( pad.buttons & SCE_CTRL_DOWN ) {
+			sceRtcGetCurrentTick(&curtick);
+			if( sceRtcCompareTick(&curtick, &tick) >= 0 ) { // 0 on equal, <0 when tick1 < tick2, >0 when tick1 > tick2 
+				psvDebugScreenSetXY(50, 3);
+				psvDebugScreenSetTextColor(GREY);
+				psvDebugScreenPrintf("Saving Report..");
+
+				savereport("ux0:data/psvident.txt");
+				sendNotification("Report saved to ux0:data/psvident.txt");
+				
+				printMenu(menu); // refresh
+			}
 		}
 		
 		/// exit combo

@@ -93,6 +93,7 @@ target_link_libraries(${PROJECT_NAME}_kernel
   SceSysrootForDriver_stub 
   SceSysconForDriver_stub
   ScePervasiveForDriver_stub
+  SceKernelSuspendForDriver_stub
   taihenForKernel_stub
   taihenModuleUtils_stub
 )
@@ -145,7 +146,7 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
 set(VITA_IP  "192.168.178.28")
 
 add_custom_target(vpksend
-	COMMAND curl -T ${PROJECT_NAME}.vpk ftp://${VITA_IP}:1337/ux0:/
+	COMMAND curl -T ${PROJECT_NAME}.vpk ftp://${VITA_IP}:1337/ux0:/VPK/
 	DEPENDS ${PROJECT_NAME}.vpk
 )
 

@@ -232,6 +232,70 @@ int k_psvident_sysroot_DIPSwitches(uint8_t *string) {
 	return 0;
 }
 
+int k_psvident_nvs_GetKibanId(uint8_t *string) {
+	uint32_t state;
+	ENTER_SYSCALL(state);
+	
+	////////////////////
+	
+	static char nvs[0x20];
+	unsigned int ret = -1;
+	
+	memset(nvs, 0, 0x20);
+	
+	
+	tai_module_info_t sysmem_info;
+	taiGetModuleInfoForKernel(KERNEL_PID, "SceSysmem", &sysmem_info);
+	ret = module_get_export_func(KERNEL_PID, "SceSysmem", 0x7290B21C, 0x4DF40893, (uintptr_t *)&SceKernelSuspendForDriver_4DF40893); // SignalNvsAcquire
+	if( ret < 0 ) {
+		EXIT_SYSCALL(state);
+		return SCE_KERNEL_START_NO_RESIDENT;
+	}
+	ret = module_get_export_func(KERNEL_PID, "SceSysmem", 0x7290B21C, 0x2BB92967, (uintptr_t *)&SceKernelSuspendForDriver_2BB92967); // SignalNvsFree
+	if( ret < 0 ) {
+		EXIT_SYSCALL(state);
+		return SCE_KERNEL_START_NO_RESIDENT;
+	}
+	tai_module_info_t ssmgr_info;
+	taiGetModuleInfoForKernel(KERNEL_PID, "SceSblSsMgr", &ssmgr_info);
+	ret = module_get_export_func(KERNEL_PID, "SceSblSsMgr", 0x74580D9F, 0xC2EC8F5A, (uintptr_t *)&sceSblNvsReadDataForKernel);
+	if( ret < 0 ) {
+		EXIT_SYSCALL(state);
+		return SCE_KERNEL_START_NO_RESIDENT;
+	}
+	
+	SceKernelSuspendForDriver_4DF40893(0); // signal acquire
+	ret = sceSblNvsReadDataForKernel(0x4E0, &nvs[0], 0x20); // offset, buffer, size
+	if( ret < 0 ) {
+		SceKernelSuspendForDriver_2BB92967(0); // signal free
+		EXIT_SYSCALL(state);
+		return ret;
+	}
+	SceKernelSuspendForDriver_2BB92967(0); // signal free
+
+		/* https://github.com/SKGleba/psp2etoi/blob/5c8b1e85a3c1db83c3cf38710e3bd1a9cc9500c3/kernel/main.c#L377 */
+		
+		/// STEP 0
+        //ksceKernelSignalNvsAcquire(0);
+		
+        /// STEP 1
+        //ksceSysconNvsSetRunMode(0);
+		
+		/// STEP 2/3
+        //ret = ksceSysconNvsReadData(0x4E0, nvs, 0x20);
+		
+		/// STEP 4
+        //ksceKernelSignalNvsFree(0);
+		
+		
+	////////////////////
+	
+	ksceKernelMemcpyKernelToUser(string, &nvs, sizeof(nvs));
+	
+	EXIT_SYSCALL(state);
+	return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 

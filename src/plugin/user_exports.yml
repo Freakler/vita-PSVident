@@ -19,6 +19,7 @@ psvident_user:
         - psvident_sysroot_GetBatteryVersion
         - psvident_pervasive_GetSoCRevision
         - psvident_sysroot_DIPSwitches
+        - psvident_nvs_GetKibanId
         - psvident_mbr_GetEmmcSize
         - psvident_sysroot_GetDipSwitches
         - psvident_syscon_GetTouchpanelDeviceInfo

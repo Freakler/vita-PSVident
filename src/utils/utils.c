@@ -133,8 +133,8 @@ void aes256cbc(uint8_t *key, uint8_t *iv_in, uint8_t *in, uint16_t len, uint8_t 
 }
 
 // https://github.com/devnoname120/RegistryEditorMOD/blob/master/main.c#L203
-char int2hex[] = "0123456789ABCDEF";
-void convert2hex(char *buf, char *buf2, int len) { // buf2 needs to be at least 3x sizeof(buf)
+unsigned char int2hex[] = "0123456789ABCDEF";
+void convert2hex(unsigned char *buf, char *buf2, int len) { // buf2 needs to be at least 3x sizeof(buf)
 	int i;
 	for( i = 0; i < len; i++ ) {
 		buf2[3*i+0] = int2hex[buf[i] >> 4];

@@ -68,6 +68,10 @@ int psvident_sysroot_GetDipSwitches(uint8_t *string) {
 	return k_psvident_sysroot_GetDipSwitches(string);
 }
 
+int psvident_nvs_GetKibanId(uint8_t *string) {
+	return k_psvident_nvs_GetKibanId(string);
+}
+
 ///////////////////////////////////////////////
 
 void _start() __attribute__ ((weak, alias("module_start")));

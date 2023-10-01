@@ -8,8 +8,18 @@ int vshKernelCheckModelCapability(void);
 int vshSblAimgrIsVITA(void);
 int vshSblAimgrIsDolce(void);
 int sceSblPmMgrGetCurrentMode(int *result);
-int sceSblQafManagerGetQafNameForUser(char *buffer, unsigned int max_len); // NID 0x0F7EA8C2 
 
+int sceSblQafManagerGetQafNameForUser(char *buffer, unsigned int max_len); // NID 0x0F7EA8C2 
+int sceSblQafMgrIsAllowMinimumDebugMenuDisplay(void);
+int sceSblQafMgrIsAllowLimitedDebugMenuDisplay(void);
+int sceSblQafMgrIsAllowAllDebugMenuDisplay(void);
+int sceSblQafManagerIsAllowKernelDebugForUser(void);
+int sceSblQafMgrIsAllowForceUpdate(void);
+int sceSblQafMgrIsAllowNpTest(int a1, int a2, int a3);
+int sceSblQafMgrIsAllowNpFullTest(void);
+int sceSblQafMgrIsAllowNonQAPup(void);
+int sceSblQafMgrIsAllowScreenShotAlways(void);
+int sceSblQafMgrIsAllowRemoteSysmoduleLoad(void);
 
 char *getCPVersion();
 char *getCPBoardId();
@@ -20,7 +30,8 @@ char *getModelCode();
 char *getSerial();
 char *getConsoleID();
 char *getHardwareInfo();
-char *getMacAddress();
+char *getMacAddressWifi();
+char *getMacAddressLan();
 char *getFactoryFirmware();
 char *getMinFirmware();
 char *getTarget();
@@ -28,6 +39,7 @@ char *getRegionForDev();
 char *getRegion();
 char *getEmmcSize();
 char *getMotherboard();
+char *getKibanId();
 char *getModelNameCustom();
 char *getModelMore();
 char *getBaryonVersion();
@@ -81,6 +93,13 @@ char *getMemCardReadonly();
 char *getWifiSSID(int profile);
 char *getWifiPassword(int profile);
 char *getAutoAvls();
+char *getRefurbished();
+char *getTrueIdu();
 char *getMotionInfo();
+
+char *getTest();
+
+void printCapabilities(char *file);
+void printQaf(char *file);
 
 #endif

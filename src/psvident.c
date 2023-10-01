@@ -143,10 +143,10 @@ char *getMotherboard() {
 	if( ret != 0 )
 		return error(ret, "ERROR");
 	
-	sprintf(string, "%02X %02X", hwinfo[2], hwinfo[1]);
+	sprintf(string, "%02X %02X %02X", hwinfo[2], hwinfo[1], hwinfo[0]);
 	
-	if( nicemode ) 
-		switch(hwinfo[2]) {
+	if( nicemode ) {
+		switch( hwinfo[2] ) {
 			case 0x10: sprintf(string, "IRS-001"); break; // early CEMs
 			case 0x31: sprintf(string, "IRT-001"); break; // DEM G/H
 			case 0x40: sprintf(string, "IRS-002"); break; // PCH-1XXX
@@ -158,10 +158,43 @@ char *getMotherboard() {
 			case 0x82: sprintf(string, "USS-1002"); break; // PCH-20XX (new)
 			default: sprintf(string, "unknown"); break;
 		}
-
+		
+		if( (hwinfo[2] &= ~0xF0) != 0x01 ) { // additional capabilities (only non-devkits)
+			//if( (hwinfo[0] &= ~0xF0) == 0x0 ) // check wifi
+				//strcat(string, " (Wifi)");
+			
+			if( (hwinfo[0] &= ~0xF0) == 0x2 ) // check for 0xX2 where the 2 is for 3g
+				strcat(string, " (3g)");
+		}
+	}
+	
 	return string;
 }
 
+char *getKibanId() {
+	int ret = -1;
+	static char string[64];
+	uint8_t str[0x21];
+	
+	memset(str, 0, 0x21);
+	
+	if( kernmode ) { // helper plugins available
+		ret = psvident_nvs_GetKibanId(str);
+		if( ret < 0 )
+			return error(ret, "ERROR");
+	} else return "";
+	
+	if( censored )
+		str[0x13] = str[0x14] = str[0x15] = 'X';
+
+	if( nicemode ) 
+		sprintf(string, "%c%c%c-%c%c%c%c%c%c%c-%c%c%c%c%c-%c%c%c%c%c%c%c", str[0x00], str[0x01], str[0x02], str[0x03], str[0x04], str[0x05], str[0x06], str[0x07], str[0x08], str[0x09], str[0x0A], str[0x0B], str[0x0C], str[0x0D], str[0x0E], str[0x0F], str[0x10], str[0x11], str[0x12], str[0x13], str[0x14], str[0x15]);
+	else 
+		sprintf(string, "%s", str);
+	
+	return string;
+}	
+	
 char *getModelMore() {
 	static char string[64];
 	memset(string, 0, sizeof(string));
@@ -211,7 +244,7 @@ char *getModelName() {
 	static char string[64];
 	static char buf[0x200];
 	
-	ret = vshIdStorageReadLeaf(0x115, buf);
+	ret = vshIdStorageReadLeaf(0x115, buf); // protos are missing this leaf!
 	if( ret != 0 ) {
 		//if( nicemode )
 		//	sprintf(string, "%s", getModelNameCustom()); // custom
@@ -282,7 +315,7 @@ char *getSerial() {
 	// 00000000000032745212505300760C61 // PTEL-2002 	03-27.. 0530076
 	// 00000000000000003TG16201H8120014 // CEM-3000NP1	03-TG.. 8120014 
 
-	// 03-27447091 2068012
+	// we want it look like this: "03-27447091-2068012"
 	
 	memset(string, 0, sizeof(string));
 	memset(temp, 0, sizeof(temp));
@@ -297,7 +330,14 @@ char *getSerial() {
 	
 	// 32744709120680120BD0
 	
-	if( strlen(temp) > 16 ) { // there are unwanted trailing numbers (ALWAYS 4! ?)
+	if( !nicemode ) { // return as is
+		snprintf(string, 0x20, "%s", temp);
+		if( censored ) 
+			string[13] = string[14] = string[15] = 'X';
+		return string;
+	}
+	
+	if( strlen(temp) > 16 ) { // there are unwanted trailing numbers (ALWAYS 4!?)
 		temp[strlen(temp)-4] = 0;
 	} 
 	
@@ -311,14 +351,13 @@ char *getSerial() {
 				string[i] = temp[j--];
 			} else string[i] = '0'; // fill the rest in front
 		}
-		
 	}
 	
 	// 03-27447091-2068012
 	
 	if( censored ) 
 		string[16] = string[17] = string[18] = 'X';
-
+	
 	return string;
 }
 
@@ -326,21 +365,24 @@ char *getConsoleID() {
 	int i, ret = -1;
 	char CID[32];
 	static char string[64];
-
+	static char helper[8];
+	memset(string, 0, 64);
+	
 	ret = _vshSblAimgrGetConsoleId(CID);
 	if( ret != 0 )
 		return error(ret, "ERROR");
 	
-	if( censored )
-		sprintf(string, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02XXXXXXXXXXXXX", CID[0], CID[1], CID[2], CID[3], CID[4], CID[5], CID[6], CID[7], CID[8], CID[9]);
-	else
-		sprintf(string, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", CID[0], CID[1], CID[2], CID[3], CID[4], CID[5], CID[6], CID[7], CID[8], CID[9], CID[10], CID[11], CID[12], CID[13], CID[14], CID[15]);
 
-	if( nicemode ) {
-		if( censored )
-			sprintf(string, "%02X%02X %02X%02X %02X%02X %02X%02X %02X%02X XXXX XXXX XXXX", CID[0], CID[1], CID[2], CID[3], CID[4], CID[5], CID[6], CID[7], CID[8], CID[9]);
-		else
-			sprintf(string, "%02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X", CID[0], CID[1], CID[2], CID[3], CID[4], CID[5], CID[6], CID[7], CID[8], CID[9], CID[10], CID[11], CID[12], CID[13], CID[14], CID[15]);
+	for( i = 0; i < 16; i++ ) {
+		if( i >= 10 && censored ) 
+			sprintf(helper, "XX");
+		else 
+			sprintf(helper, "%02X", (unsigned char)CID[i]);
+		
+		if( i % 2 && nicemode ) 
+			strcat(helper, " ");
+		
+		strcat(string, helper);
 	}
 	
 	return string;
@@ -363,7 +405,7 @@ char *getHardwareInfo() {
 	return string;
 }
 
-char *getMacAddress() {
+char *getMacAddressWifi() { // via sceNet
 	int ret = -1;
 	static char string[32];
 	SceNetEtherAddr mac;
@@ -373,9 +415,30 @@ char *getMacAddress() {
 		return error(ret, "ERROR");
 	
 	if( censored )
-		sprintf(string, "%02X:%02X:%02X:XX:XX:XX", mac.data[0], mac.data[1], mac.data[2]);
+		sprintf(string, "%02X:%02X:%02X:%02X:XX:XX", mac.data[0], mac.data[1], mac.data[2], mac.data[3]);
 	else
 		sprintf(string, "%02X:%02X:%02X:%02X:%02X:%02X", mac.data[0], mac.data[1], mac.data[2], mac.data[3], mac.data[4], mac.data[5]);
+
+	return string;
+}
+
+char *getMacAddressLan() { // via IDStorage
+	int ret = -1;
+	static char string[64];
+	static unsigned char buf[0x200];
+	
+	ret = vshIdStorageReadLeaf(0x119, buf); 
+	if( ret != 0 && ret != 0x80230005) 
+		return error(ret, "ERROR");
+	if( ret == 0x80230005) // no leaf
+		return "";
+	if( buf[2] == 0xFF && buf[3] == 0xFF && buf[4] == 0xFF && buf[5] == 0xFF ) // on slims leaf exists but FFed
+		return "";
+	
+	if( censored )
+		sprintf(string, "%02X:%02X:%02X:%02X:XX:XX", buf[0], buf[1], buf[2], buf[3]);
+	else 
+		sprintf(string, "%02X:%02X:%02X:%02X:%02X:%02X", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
 
 	return string;
 }
@@ -385,7 +448,7 @@ char *getMinFirmware() { // the lowest firmware that can be installed (via idsto
 	static char string[32];
 	unsigned int version = -1;
 		
-	ret = _vshSblAimgrGetSMI(&version); // SMI = Service Manufacturing Information
+	ret = _vshSblAimgrGetSMI(&version); // SMI = Service/System Manufacturing Information
 	if( ret != 0 ) {
 		/// try manually
 		static char buf[0x200];
@@ -454,15 +517,16 @@ char *getTarget() {
 	return string;
 }
 
-char *getRegionForDev() { // from Model String
+char *getRegionForDev() { // from Model String #ugly
 	int ret = -1;
 	static char buf[0x200];
 	static char string[32];
 	
-	ret = vshIdStorageReadLeaf(0x115, buf);
-	if( ret != 0 )
+	ret = vshIdStorageReadLeaf(0x115, buf); // protos are missing this leaf!
+	if( ret != 0 ) {
 		return error(ret, "ERROR");
-	
+		//return getRegionForDevProto(); // todo
+	}
 	char model = buf[1]; // D or T
 	char version = buf[4]; // 1 or 2
 	char code = buf[7]; // 0, 1, 2 ..
@@ -479,7 +543,7 @@ char *getRegionForDev() { // from Model String
 			case '1': sprintf(string, "(EU & US)"); break;
 			case '2': sprintf(string, "(Asia)"); break;
 			default: sprintf(string, "ERROR");
-		}	
+		}
 	}
 	
 	if( model == 'T' ) { // Testkit
@@ -515,9 +579,9 @@ char *getRegion() {
 	if( ret != 0 ) 
 		return error(ret, "ERROR");
 	
-	//sprintf(string, "0x%03X", CID[4] * 0x100 + CID[5]);
+	sprintf(string, "0x%03X", CID[4] * 0x100 + CID[5]);
 	
-	//if( nicemode ) {
+	if( nicemode ) {
 		switch( CID[4] * 0x100 + CID[5] ) {
 			case 0x100:
 				sprintf(string, "-");
@@ -544,7 +608,7 @@ char *getRegion() {
 			case 0x111: sprintf(string, "RSV3 (reserved)"); break;
 			default: sprintf(string, "Unknown?!");
 		}	
-	//}
+	}
 	
 	return string;
 }
@@ -814,9 +878,9 @@ char *getSmiString2(int part) {
 }
 
 char *getVersionTxtString() {
-	unsigned char dat_iv[0x10]      = {0x37,0xFA,0x4E,0xD2,0xB6,0x61,0x8B,0x59,0xB3,0x4F,0x77,0x0F,0xBB,0x92,0x94,0x7B}; //37FA4ED2B6618B59B34F770FBB92947B"
-	unsigned char dat_key_100[0x20] = {0x06,0xCC,0x2E,0x8F,0xD4,0x08,0x05,0xA7,0x36,0xF1,0x7C,0xF2,0xC1,0x3D,0x58,0xA6,0xC8,0xCF,0x10,0x7E,0x9E,0x4A,0x66,0xAE,0x25,0xD3,0x9C,0xA2,0x1C,0x25,0x31,0xCC}; //06CC2E8FD40805A736F17CF2C13D58A6C8CF107E9E4A66AE25D39CA21C2531CC"	//1.00 - 1.691 
-	unsigned char dat_key_180[0x20] = {0x27,0x2A,0xE4,0x37,0x8C,0xB0,0x6B,0xF3,0xF6,0x58,0xF5,0x1C,0x77,0xAC,0xA2,0x76,0x9B,0xE8,0x7F,0xB1,0x9B,0xBF,0x3D,0x4D,0x6B,0x1B,0x0E,0xD2,0x26,0xE3,0x9C,0xC6}; //272AE4378CB06BF3F658F51C77ACA2769BE87FB19BBF3D4D6B1B0ED226E39CC6"	//1.80+
+	unsigned char dat_iv[0x10]      = {0x37,0xFA,0x4E,0xD2,0xB6,0x61,0x8B,0x59,0xB3,0x4F,0x77,0x0F,0xBB,0x92,0x94,0x7B}; // 37FA4ED2B6618B59B34F770FBB92947B
+	unsigned char dat_key_100[0x20] = {0x06,0xCC,0x2E,0x8F,0xD4,0x08,0x05,0xA7,0x36,0xF1,0x7C,0xF2,0xC1,0x3D,0x58,0xA6,0xC8,0xCF,0x10,0x7E,0x9E,0x4A,0x66,0xAE,0x25,0xD3,0x9C,0xA2,0x1C,0x25,0x31,0xCC}; // 06CC2E8FD40805A736F17CF2C13D58A6C8CF107E9E4A66AE25D39CA21C2531CC //1.00 - 1.691 
+	unsigned char dat_key_180[0x20] = {0x27,0x2A,0xE4,0x37,0x8C,0xB0,0x6B,0xF3,0xF6,0x58,0xF5,0x1C,0x77,0xAC,0xA2,0x76,0x9B,0xE8,0x7F,0xB1,0x9B,0xBF,0x3D,0x4D,0x6B,0x1B,0x0E,0xD2,0x26,0xE3,0x9C,0xC6}; // 272AE4378CB06BF3F658F51C77ACA2769BE87FB19BBF3D4D6B1B0ED226E39CC6 //1.80+
 	
 	static char string[2048];
 	memset(&string, 0, sizeof(string));
@@ -971,25 +1035,25 @@ char *getBatteryLifeTime() {
 
 char *getModeIDU() {
 	static char string[8];
-	sprintf(string, "%s", vshSysconIsIduMode() ? "true" : "false");
+	sprintf(string, "%s", vshSysconIsIduMode() ? "TRUE" : "FALSE");
 	return string;
 }
 
 char *getModeShow() {
 	static char string[8];
-	sprintf(string, "%s", vshSysconIsShowMode() ? "true" : "false");
+	sprintf(string, "%s", vshSysconIsShowMode() ? "TRUE" : "FALSE");
 	return string;
 }
 
 char *getModeDownloader() {
 	static char string[8];
-	sprintf(string, "%s", vshSysconIsDownLoaderMode() ? "true" : "false");
+	sprintf(string, "%s", vshSysconIsDownLoaderMode() ? "TRUE" : "FALSE");
 	return string;
 }
 
 char *getModeDevelopment() {
 	static char string[8];
-	sprintf(string, "%s", vshSblSsIsDevelopmentMode() ? "true" : "false");
+	sprintf(string, "%s", vshSblSsIsDevelopmentMode() ? "TRUE" : "FALSE");
 	return string;
 }
 
@@ -1004,7 +1068,7 @@ char *getModeManufacturing() {
 			return error(ret, "ERROR");
 	} else return "";
 	
-	sprintf(string, "%s", ((manumode & 0x4) != 0) ? "true" : "false"); // check 4th bit https://github.com/SKGleba/PSP2-batteryFixer/blob/master/kernel/main.c#L89
+	sprintf(string, "%s", ((manumode & 0x4) != 0) ? "TRUE" : "FALSE"); // check 4th bit https://github.com/SKGleba/PSP2-batteryFixer/blob/master/kernel/main.c#L89
 	return string;
 }
 
@@ -1026,12 +1090,12 @@ char *getRegistryNP() {
 	int ret = getRegistryInteger(&result, "/CONFIG/NP", "enable_np");
 	if( ret != 0 )
 		return error(ret, "ERROR");
-	sprintf(string,"%s", result ? "true" : "false");
+	sprintf(string,"%s", result ? "TRUE" : "FALSE");
 	return string;
 }
 
 char *getRegistryAccountId() {
-	static char str[16];
+	static unsigned char str[16];
 	static char string[64];
 	int ret = getRegistryBinary(str, "/CONFIG/NP", "account_id");
 	if( ret != 0 )
@@ -1304,7 +1368,7 @@ char *getMemCardReadonly() {
 	sprintf(string, "%d", info.unk_0x04); 
 	
 	if( nicemode )
-		sprintf(string, "%s", info.unk_0x04 ? "true" : "false"); 
+		sprintf(string, "%s", info.unk_0x04 ? "TRUE" : "FALSE"); 
 	
 	return string;
 }
@@ -1352,12 +1416,49 @@ char *getAutoAvls() {
 		return error(ret, "ERROR");
 	
 	if( buf[0] == 0x01 )
-		return "true";
+		return "TRUE";
 	
 	if( buf[0] == 0x00 )
-		return "false";
+		return "FALSE";
 	
 	return warning(-1, "ERROR");
+}
+
+char *getRefurbished() {
+	if( getSerial()[1] == '8' ) {
+		return "TRUE";
+	}
+	return "FALSE";
+}
+
+char *getTrueIdu() {
+	unsigned char hwinfo[4];
+	int ret = _vshSysconGetHardwareInfo(hwinfo);
+	if( ret != 0 ) 
+		return error(ret, "ERROR");
+	
+	if( hwinfo[0] >> 4 == 0x8 ) {
+		return "TRUE";
+	}
+	return "FALSE";
+}
+
+char *getTest() {
+	int ret = -1;
+	static char string[64];
+	static unsigned char buf[0x200];
+	
+	ret = vshIdStorageReadLeaf(0x119, buf); 
+	if( ret != 0 ) {
+		return error(ret, "ERROR");
+	}
+	
+	if( nicemode )
+		sprintf(string, "%02X %02X %02X %02X %02X %02X", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]); // print HEX
+	else 
+		snprintf(string, 0x11, "%s", buf); // print String
+
+	return string;
 }
 
 
@@ -1380,3 +1481,48 @@ char *getMotionInfo() {
 	
 	return string;
 }*/
+
+void printCapabilities(char *file) {
+	logPrintf(file, "sceKernelGetModelForCDialog(): 0x%08X", sceKernelGetModelForCDialog());
+	
+	logPrintf(file, "vshKernelCheckModelCapability(): %d", vshKernelCheckModelCapability());
+	
+	logPrintf(file, "vshSblAimgrIsCEX(): %d", vshSblAimgrIsCEX());
+	logPrintf(file, "vshSblAimgrIsDEX(): %d", vshSblAimgrIsDEX());
+	logPrintf(file, "vshSblAimgrIsTest(): %d", vshSblAimgrIsTest());
+	logPrintf(file, "vshSblAimgrIsTool(): %d", vshSblAimgrIsTool());
+	logPrintf(file, "vshSblAimgrIsDolce(): %d", vshSblAimgrIsDolce());
+	logPrintf(file, "vshSblAimgrIsGenuineDolce(): %d", vshSblAimgrIsGenuineDolce());
+	logPrintf(file, "vshSblAimgrIsVITA(): %d", vshSblAimgrIsVITA());
+	logPrintf(file, "vshSblAimgrIsGenuineVITA(): %d", vshSblAimgrIsGenuineVITA());
+	
+	logPrintf(file, "vshSysconHasWWAN(): %d", vshSysconHasWWAN());
+	logPrintf(file, "vshSysconIsMCEmuCapable(): %d", vshSysconIsMCEmuCapable());
+	
+	logPrintf(file, "vshMemoryCardGetCardInsertState(): %d", vshMemoryCardGetCardInsertState());
+	logPrintf(file, "vshRemovableMemoryGetCardInsertState(): %d", vshRemovableMemoryGetCardInsertState());
+	
+}
+void printQaf(char *file) {
+	logPrintf(file, "sceSblQafMgrIsAllowAllDebugMenuDisplay(): 0x%08X", sceSblQafMgrIsAllowAllDebugMenuDisplay());
+	logPrintf(file, "sceSblQafMgrIsAllowForceUpdate(): 0x%08X", sceSblQafMgrIsAllowForceUpdate());
+	logPrintf(file, "sceSblQafMgrIsAllowLimitedDebugMenuDisplay(): 0x%08X", sceSblQafMgrIsAllowLimitedDebugMenuDisplay());
+	logPrintf(file, "sceSblQafMgrIsAllowMinimumDebugMenuDisplay(): 0x%08X", sceSblQafMgrIsAllowMinimumDebugMenuDisplay());
+	logPrintf(file, "sceSblQafMgrIsAllowNonQAPup(): 0x%08X", sceSblQafMgrIsAllowNonQAPup());
+	logPrintf(file, "sceSblQafMgrIsAllowNpFullTest(): 0x%08X", sceSblQafMgrIsAllowNpFullTest());
+	//logPrintf(file, "sceSblQafMgrIsAllowNpTest(): 0x%08X", sceSblQafMgrIsAllowNpTest());
+	logPrintf(file, "sceSblQafMgrIsAllowRemoteSysmoduleLoad(): 0x%08X", sceSblQafMgrIsAllowRemoteSysmoduleLoad());
+	logPrintf(file, "sceSblQafMgrIsAllowScreenShotAlways(): 0x%08X", sceSblQafMgrIsAllowScreenShotAlways());
+	
+	/*logPrintf(file, "ksceSblQafMgrIsAllowControlIduAutoUpdate(): 0x%08X", ksceSblQafMgrIsAllowControlIduAutoUpdate());
+	logPrintf(file, "ksceSblQafMgrIsAllowDecryptedBootConfigLoad(): 0x%08X", ksceSblQafMgrIsAllowDecryptedBootConfigLoad());
+	logPrintf(file, "ksceSblQafMgrIsAllowDtcpIpReset(): 0x%08X", ksceSblQafMgrIsAllowDtcpIpReset());
+	logPrintf(file, "ksceSblQafMgrIsAllowHost0Access(): 0x%08X", ksceSblQafMgrIsAllowHost0Access());
+	logPrintf(file, "ksceSblQafMgrIsAllowKeepCoreFile(): 0x%08X", ksceSblQafMgrIsAllowKeepCoreFile());
+	logPrintf(file, "ksceSblQafMgrIsAllowLoadMagicGate(): 0x%08X", ksceSblQafMgrIsAllowLoadMagicGate());
+	logPrintf(file, "ksceSblQafMgrIsAllowMarlinTest(): 0x%08X", ksceSblQafMgrIsAllowMarlinTest());
+	logPrintf(file, "ksceSblQafMgrIsAllowNearTest(): 0x%08X", ksceSblQafMgrIsAllowNearTest());
+	logPrintf(file, "ksceSblQafMgrIsAllowPSPEmuShowQAInfo(): 0x%08X", ksceSblQafMgrIsAllowPSPEmuShowQAInfo());
+	logPrintf(file, "ksceSblQafMgrIsAllowRemotePlayDebug(): 0x%08X", ksceSblQafMgrIsAllowRemotePlayDebug());
+	logPrintf(file, "ksceSblQafMgrIsAllowSystemAppDebug(): 0x%08X", ksceSblQafMgrIsAllowSystemAppDebug());*/
+}
