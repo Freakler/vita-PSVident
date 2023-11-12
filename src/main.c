@@ -18,7 +18,7 @@
 #include "print/pspdebug.h"
 
 
-#define VERSION "v0.42"
+#define VERSION "v0.43"
 #define APP_PATH "ux0:app/PSVIDENT0/"
 
 int censored = 0;
@@ -68,28 +68,24 @@ void hardware() {
 	psvDebugScreenSetTextColor(WHITE);
 	psvDebugScreenPrintf("Motherboard:");
 	psvDebugScreenSetXY(x2, y);
-	//psvDebugScreenPrintf("%s  %s", getMotherboard(), getKibanId());
-	psvDebugScreenPrintf("%s", getMotherboard());
+	if( vshSblAimgrIsTool() )
+		psvDebugScreenPrintf("%s + %s", getMotherboard(), getCpboard());
+	else
+		psvDebugScreenPrintf("%s", getMotherboard());
 	y += 2;
 	
+	/*if( vshSblAimgrIsTool() ) { // Devkit
 	
-	/// DEV ///////////////////////////////////////////	
-	
-	if( vshSblAimgrIsTool() ) { // Devkit
-	
-		// Neighborhood outputs like this:
-		// cp info.   : bid.4 ver.1301
-		// (Board ID + version)
-		
-		/// CP Board ID
+		/// CP Board Info
 		psvDebugScreenSetXY(x1, y);
-		psvDebugScreenSetTextColor(YELLOW);
+		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("CP Board:");
 		psvDebugScreenSetXY(x2, y);
-		psvDebugScreenPrintf("bid. %s ver. %s", getCPBoardId(), getCPVersion());
+		psvDebugScreenPrintf("%s", getCpInfo());
 		y += 2;
-	}
+	}*/
 	y += 1;
+	
 	
 	
 	/// Model Code + Serial
@@ -107,6 +103,17 @@ void hardware() {
 	psvDebugScreenSetXY(x2, y);
 	psvDebugScreenPrintf("%s", getKibanId());
 	y += 2;
+	
+	if( vshSblAimgrIsTool() ) { // Devkit
+	
+		/// CP Board ID (original married CP serial from idstorage!)
+		psvDebugScreenSetXY(x1, y);
+		psvDebugScreenSetTextColor(WHITE);
+		psvDebugScreenPrintf("CP Board Serial:");
+		psvDebugScreenSetXY(x2, y);
+		psvDebugScreenPrintf("%s", getCpKibanId());
+		y += 2;
+	}
 	
 	/// MAC Address
 	psvDebugScreenSetXY(x1, y);
@@ -216,7 +223,7 @@ void software() {
 	
 		/// Mode - Development
 		psvDebugScreenSetXY(x1, y);
-		psvDebugScreenSetTextColor(YELLOW);
+		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("Development Mode:");
 		psvDebugScreenSetXY(x2, y);
 		psvDebugScreenPrintf("%s", getModeDevelopment());
@@ -568,7 +575,23 @@ void miscellaneous() {
 	psvDebugScreenPrintf("%s", getTrueIdu());
 	y += 2;	
 	
-	
+	/// CP Timestamp
+	if( vshSblAimgrIsTool() ) { // DEVKIT
+		psvDebugScreenSetXY(x1, y);
+		psvDebugScreenSetTextColor(WHITE);
+		psvDebugScreenPrintf("CP Timestamp:");
+		psvDebugScreenSetXY(x2, y);
+		psvDebugScreenPrintf("%s", getCpTimestamp());
+		y += 2;
+	}
+		
+	/// Default Wave Color
+	psvDebugScreenSetXY(x1, y);
+	psvDebugScreenSetTextColor(WHITE);
+	psvDebugScreenPrintf("Default Wave Color:");
+	psvDebugScreenSetXY(x2, y);
+	psvDebugScreenPrintf("%s", getWaveColor());
+	y += 2;	
 }
 
 void memorycard() {
@@ -800,7 +823,7 @@ void activation() {
 	
 		/// Activation Period
 		psvDebugScreenSetXY(x1, y);
-		psvDebugScreenSetTextColor(YELLOW);
+		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("Activation Period:");
 		psvDebugScreenSetXY(x2, y);
 		psvDebugScreenPrintf("%s", getActivationPeriod());
@@ -808,24 +831,12 @@ void activation() {
 		
 		/// Activation Count
 		psvDebugScreenSetXY(x1, y);
-		psvDebugScreenSetTextColor(YELLOW);
+		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("Activation Count:");
 		psvDebugScreenSetXY(x2, y);
 		psvDebugScreenPrintf("%s", getActivationCount());
 		y += 2;
-		
-		
-		if( vshSblAimgrIsTool() ) { // DEVKIT
-		
-			/// CP Timestamp
-			psvDebugScreenSetXY(x1, y);
-			psvDebugScreenSetTextColor(YELLOW);
-			psvDebugScreenPrintf("CP Timestamp:");
-			psvDebugScreenSetXY(x2, y);
-			psvDebugScreenPrintf("%s", getCPTimestamp());
-			y += 2;
-			
-		}
+
 		
 	}
 	
@@ -867,22 +878,9 @@ void wifiprofiles() {
 
 ////////////////////	////////////////////////////	/////////////////////////	///////////////////////	////////////////////	////////////////////////////
 
-char *warning(int code, char *msg) {
-	psvDebugScreenSetTextColor(YELLOW);
-	
+char *message(int code, char *msg) {
 	static char string[16];
-	if( !nicemode ) {
-		sprintf(string, "0x%08X", code);
-		return string;
-	}
 	
-	return msg;
-}
-
-char *error(int code, char *msg) {
-	psvDebugScreenSetTextColor(RED);
-	
-	static char string[16];
 	if( !nicemode ) {
 		sprintf(string, "0x%08X", code);
 		return string;
@@ -897,7 +895,21 @@ char *error(int code, char *msg) {
 		case 0x80230005: return "NO LEAF"; // C4-3085-6
 		default: return msg;
 	}
+	
+	return msg;
 }
+
+char *warning(int code, char *msg) {
+	psvDebugScreenSetTextColor(YELLOW);
+	return message(code, msg);
+}
+
+char *error(int code, char *msg) {
+	psvDebugScreenSetTextColor(RED);
+	return message(code, msg);
+}
+
+
 
 void savereport(char *file) {
 	
@@ -916,12 +928,18 @@ void savereport(char *file) {
 	logPrintf(file, "Target: %s", getTarget());
 	logPrintf(file, "Motherboard: %s", getMotherboard());
 	if( vshSblAimgrIsTool() ) { // Devkit
-	logPrintf(file, "CP Board: bid. %s ver. %s", getCPBoardId(), getCPVersion());
+	logPrintf(file, "CP Board: %s", getCpboard());
+	logPrintf(file, "CP Info: %s", getCpInfo());
 	}
 	logPrintf(file, "Serial: %s", getSerial());
 	logPrintf(file, "Board Serial: %s", getKibanId());
+	if( vshSblAimgrIsTool() ) { // Devkit
+	logPrintf(file, "CP Board Serial: %s", getCpKibanId());
+	}
 	logPrintf(file, "MAC Address (Wifi): %s", getMacAddressWifi());
+	if( vshSblAimgrIsDolce() || vshSblAimgrIsDEX() || vshSblAimgrIsTool() ) { // PSTV or Development Hardware
 	logPrintf(file, "MAC Address (Lan): %s", getMacAddressLan());
+	}
 	logPrintf(file, "ConsoleID: %s", getConsoleID());
 	logPrintf(file, "Hardware Info: %s", getHardwareInfo());
 	logPrintf(file, "SoC revision: %s", getSoCRevision());
@@ -956,7 +974,7 @@ void savereport(char *file) {
 	logPrintf(file, "QA Flags: %s", getQAFlags());
 	logPrintf(file, "QA Token Name: %s", getQATokenName());
 	logPrintf(file, "Boot Flags: %s", getBootFlags());
-	logPrintf(file, "DIP Switches 0 - 127: %s", getDipSwitches(0));
+	logPrintf(file, "DIP Switches 000-127: %s", getDipSwitches(0));
 	logPrintf(file, "DIP Switches 128-255: %s", getDipSwitches(1));
 	logPrintf(file, "\n");
 	
@@ -1012,9 +1030,6 @@ void savereport(char *file) {
 	logPrintf(file, "Activation Period: %s", getActivationPeriod());
 	logPrintf(file, "Activation Count: %s", getActivationCount());
 	}
-	if( vshSblAimgrIsTool() ) { // DEVKIT
-	logPrintf(file, "CP Timestamp: %s", getCPTimestamp());
-	}
 	logPrintf(file, "\n");
 	
 	
@@ -1032,6 +1047,11 @@ void savereport(char *file) {
 	logPrintf(file, "Enter Button: %s", getEnterButton());
 	logPrintf(file, "Auto AVLS: %s", getAutoAvls());
 	logPrintf(file, "Refurbished: %s", getRefurbished());
+	logPrintf(file, "Factory IDU: %s", getTrueIdu());
+	if( vshSblAimgrIsTool() ) { // DEVKIT
+	logPrintf(file, "CP Timestamp: %s", getCpTimestamp());
+	}
+	logPrintf(file, "Default Wave Color: %s", getWaveColor());
 	logPrintf(file, "\n");
 	
 	
@@ -1057,6 +1077,22 @@ void printMenu(int menu) {
 	
 	////////////////////////////////////////////////
 	
+	/// menu indicator
+	//if( 1 ) { // todo blink?!
+		if( menu > 0 ) { // display "go left"
+			psvDebugScreenSetXY(0, 16); // 32
+			psvDebugScreenSetTextColor(GREY);
+			psvDebugScreenPrintf("<");
+		}
+		if( menu < 8 /* hardcoded! */ ) { // display "go right"
+			psvDebugScreenSetXY(67, 16); // 32
+			psvDebugScreenSetTextColor(GREY);
+			psvDebugScreenPrintf(">");
+		}
+	//} 
+		
+	////////////////////////////////////////////////
+	
 	switch( menu ) {
 		case 0: hardware(); break;
 		case 1: firmware(); break;
@@ -1076,6 +1112,7 @@ void printMenu(int menu) {
 		
 		default: hardware();
 	}
+
 }
 
 
@@ -1186,9 +1223,10 @@ int main(int argc, char *argv[]) {
 			/// save report - stage 1
 			if( pad.buttons & SCE_CTRL_DOWN ) {
 				sceRtcGetCurrentTick(&tick);
-				sceRtcTickAddSeconds(&tick, &tick, 3); // 3 seconds
+				sceRtcTickAddSeconds(&tick, &tick, 2); // 2 seconds
 			}
 		}
+		
 		
 		/// save report - stage 2
 		if( pad.buttons & SCE_CTRL_DOWN ) {
@@ -1197,13 +1235,19 @@ int main(int argc, char *argv[]) {
 				psvDebugScreenSetXY(50, 3);
 				psvDebugScreenSetTextColor(GREY);
 				psvDebugScreenPrintf("Saving Report..");
-
-				savereport("ux0:data/psvident.txt");
-				sendNotification("Report saved to ux0:data/psvident.txt");
+				
+				static char string[64];
+				sprintf(string, "ux0:data/psvident_%s.txt", getUnique());
+				savereport(string);
+				
+				static char string2[128];
+				sprintf(string2, "Report saved to %s", string);
+				sendNotification(string2);
 				
 				printMenu(menu); // refresh
 			}
 		}
+		
 		
 		/// exit combo
 		if( (pad.buttons & SCE_CTRL_START) && (pad.buttons & SCE_CTRL_SELECT) )

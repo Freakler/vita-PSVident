@@ -21,9 +21,9 @@ int sceSblQafMgrIsAllowNonQAPup(void);
 int sceSblQafMgrIsAllowScreenShotAlways(void);
 int sceSblQafMgrIsAllowRemoteSysmoduleLoad(void);
 
-char *getCPVersion();
-char *getCPBoardId();
-char *getCPTimestamp();
+char *getCpInfo();
+char *getCpKibanId();
+char *getCpTimestamp();
 char *getSoCRevision();
 char *getModelName();
 char *getModelCode();
@@ -39,6 +39,7 @@ char *getRegionForDev();
 char *getRegion();
 char *getEmmcSize();
 char *getMotherboard();
+char *getCpboard();
 char *getKibanId();
 char *getModelNameCustom();
 char *getModelMore();
@@ -93,6 +94,7 @@ char *getMemCardReadonly();
 char *getWifiSSID(int profile);
 char *getWifiPassword(int profile);
 char *getAutoAvls();
+char *getWaveColor();
 char *getRefurbished();
 char *getTrueIdu();
 char *getMotionInfo();
@@ -102,4 +104,5 @@ char *getTest();
 void printCapabilities(char *file);
 void printQaf(char *file);
 
+char *getUnique();
 #endif

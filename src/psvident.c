@@ -50,10 +50,11 @@ char *getEmmcSize() {
 	return string;
 }
 
-char *getCPVersion() {
+char *getCpInfo() {
 	int ret = -1;
-	static char string[16];
+	static char string[32];
 	uint8_t buf[0x20];
+	
 	
 	if( kernmode ) { // helper plugins available
 		ret = psvident_sysroot_DIPSwitches(buf);
@@ -62,37 +63,48 @@ char *getCPVersion() {
 	} else return "";
 	
 	unsigned short version = *(unsigned short *)(buf + 0x4); 
-
-	sprintf(string, "0x%X", version);
-
-	if( nicemode ) 
-		sprintf(string, "%d", version);
-	
-	return string;
-}
-
-char *getCPBoardId() {
-	int ret = -1;
-	static char string[16];
-	uint8_t buf[0x20];
-	
-	if( kernmode ) { // helper plugins available
-		ret = psvident_sysroot_DIPSwitches(buf);
-		if( ret != 0 )
-			return error(ret, "ERROR");
-	} else return "";
-	
 	unsigned short id = *(unsigned short *)(buf + 0x6); 
+	
+	sprintf(string, "%04X %04X", version, id);
 
-	sprintf(string, "0x%X", id);
+	if( nicemode ) {
+		// Neighborhood outputs like this:
+		// cp info.   : bid.4 ver.1301
+		// (BoardID + Version)
+		sprintf(string, "bid.%X ver.%x", id, version);
+	}
+	return string;
+}
 
+char *getCpKibanId() {
+	int ret = -1;
+	static char string[64];
+	static char str[0x21];
+	//uint8_t str[0x21];
+	static char buf[0x200];
+	
+	ret = vshIdStorageReadLeaf(0x102, buf);
+	if( ret != 0 ) { // either error reading leaf or its prototype that has no modelstring
+		return error(ret, "ERROR");
+	}
+	
+	snprintf(str, 0x21, "%s", &buf[0x48]);
+	
+	if( str[0] == 0xFF && str[1] == 0xFF && str[2] == 0xFF )
+		return error(ret, "ERROR");
+	
+	if( censored )
+		str[0x13] = str[0x14] = str[0x15] = 'X';
+	
 	if( nicemode ) 
-		sprintf(string, "%d", id);
+		sprintf(string, "%c%c%c-%c%c%c%c%c%c%c-%c%c%c%c%c-%c%c%c%c%c%c%c", str[0x00], str[0x01], str[0x02], str[0x03], str[0x04], str[0x05], str[0x06], str[0x07], str[0x08], str[0x09], str[0x0A], str[0x0B], str[0x0C], str[0x0D], str[0x0E], str[0x0F], str[0x10], str[0x11], str[0x12], str[0x13], str[0x14], str[0x15]);
+	else 
+		sprintf(string, "%s", str);
 	
 	return string;
 }
 
-char *getCPTimestamp() {
+char *getCpTimestamp() {
 	int ret = -1;
 	static char string[32];
 	uint8_t buf[0x20];
@@ -171,6 +183,54 @@ char *getMotherboard() {
 	return string;
 }
 
+char *getCpboard() {
+	int ret = -1;
+	static char string[32];
+	uint8_t buf[0x20];
+	
+	if( kernmode ) { // helper plugins available
+		ret = psvident_sysroot_DIPSwitches(buf);
+		if( ret != 0 )
+			return error(ret, "ERROR");
+	} else return "";
+	
+	unsigned short version = *(unsigned short *)(buf + 0x4); 
+	unsigned short id = *(unsigned short *)(buf + 0x6); 
+	
+	// Neighborhood outputs like this:
+	// cp info.   : bid.4 ver.1301
+	// (BoardID + Version)
+	sprintf(string, "bid.%X ver.%x", id, version);
+	//sprintf(string, "%04X %04X", version, id);
+	
+	/***
+	bid.3 ver.0851 (DEM-G00)
+	bid.3 ver.0910 (DEM-G19)
+	bid.3 ver.0920 (DEM-H84)
+	0-835-185-02
+	
+	?
+	0-851-147-03 (DEM-L)
+	
+	?
+	0-851-147-07 (DEM-P)
+	
+	bid.4 ver.1301
+	1-884-532-10 (DEM-R)
+	1-884-532-11 (PDEL)
+	***/
+	
+	if( nicemode ) {
+		switch( id ) {
+			case 3: sprintf(string, "GCP-001"); break; // DEM G/H
+			case 4: sprintf(string, "GCP-002"); break; // new DEM & PDEL
+			default: sprintf(string, "unknown"); break;
+		}
+	}
+	
+	return string;
+}
+	
 char *getKibanId() {
 	int ret = -1;
 	static char string[64];
@@ -374,7 +434,7 @@ char *getConsoleID() {
 	
 
 	for( i = 0; i < 16; i++ ) {
-		if( i >= 10 && censored ) 
+		if( i >= 11 && censored ) 
 			sprintf(helper, "XX");
 		else 
 			sprintf(helper, "%02X", (unsigned char)CID[i]);
@@ -927,6 +987,10 @@ char *getVersionTxtString() {
 			string[len] = data[i];
 			string[len+1] = '\0';
 		}
+		
+		// remove trailing newlines -.-
+		for( i = strlen(string); string[i-1] == '\n' || string[i-1] == '\0'; i-- )
+			string[i-1] = '\0';
 	}
 	
 	return string;
@@ -1408,12 +1472,11 @@ char *getWifiPassword(int profile) {
 
 char *getAutoAvls() {
 	int ret = -1;
-	static char string[16];
 	static char buf[0x200];
 	
 	ret = vshIdStorageReadLeaf(0x118, buf);
 	if( ret != 0 )
-		return error(ret, "ERROR");
+		return warning(ret, "ERROR"); // warning only because not every vita has it
 	
 	if( buf[0] == 0x01 )
 		return "TRUE";
@@ -1421,7 +1484,21 @@ char *getAutoAvls() {
 	if( buf[0] == 0x00 )
 		return "FALSE";
 	
-	return warning(-1, "ERROR");
+	return error(-1, "ERROR");
+}
+
+char *getWaveColor() {
+	int ret = -1;
+	static char string[16];
+	static char buf[0x200];
+	
+	ret = vshIdStorageReadLeaf(0x116, buf);
+	if( ret != 0 )
+		return warning(ret, "ERROR"); // warning only because not every vita has it
+	
+	sprintf(string, "%d", buf[1]);
+	
+	return string;
 }
 
 char *getRefurbished() {
@@ -1525,4 +1602,12 @@ void printQaf(char *file) {
 	logPrintf(file, "ksceSblQafMgrIsAllowPSPEmuShowQAInfo(): 0x%08X", ksceSblQafMgrIsAllowPSPEmuShowQAInfo());
 	logPrintf(file, "ksceSblQafMgrIsAllowRemotePlayDebug(): 0x%08X", ksceSblQafMgrIsAllowRemotePlayDebug());
 	logPrintf(file, "ksceSblQafMgrIsAllowSystemAppDebug(): 0x%08X", ksceSblQafMgrIsAllowSystemAppDebug());*/
+}
+
+char *getUnique() { // something unique of the device (currently partial mac)
+	static char string[32];
+	SceNetEtherAddr mac;
+	sceNetGetMacAddress(&mac, 0);
+	sprintf(string, "%02X%02X%02X", mac.data[3], mac.data[4], mac.data[5]);
+	return string;
 }
