@@ -56,10 +56,6 @@ int psvident_pervasive_GetSoCRevision(unsigned int *soc) {
 	return k_psvident_pervasive_GetSoCRevision(soc);
 }
 
-int psvident_sysroot_DIPSwitches(uint8_t *string) {
-	return k_psvident_sysroot_DIPSwitches(string);
-}
-
 int psvident_mbr_GetEmmcSize(unsigned int *var) {
 	return k_psvident_mbr_GetEmmcSize(var);
 }
@@ -70,6 +66,14 @@ int psvident_sysroot_GetDipSwitches(uint8_t *string) {
 
 int psvident_nvs_GetKibanId(uint8_t *string) {
 	return k_psvident_nvs_GetKibanId(string);
+}
+
+int psvident_GetActivationStatus(void) {
+    return k_psvident_GetActivationStatus();
+}
+
+int psvident_nvs_GetActData(uint8_t *string) {
+	return k_psvident_nvs_GetActData(string);
 }
 
 ///////////////////////////////////////////////

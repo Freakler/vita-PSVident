@@ -50,6 +50,8 @@ typedef struct SceKernelTouchpanelDeviceInfo2 {
 
 int ksceSysconGetTouchpanelDeviceInfo2(SceKernelTouchpanelDeviceInfo2 *pInfo);
 
+int ksceSblLicMgrGetLicenseStatus(void);
+
 int (* sceSblNvsReadDataForKernel)(uint32_t offset, char *buffer, uint32_t size);
 int (* SceKernelSuspendForDriver_4DF40893)(int a1);
 int (* SceKernelSuspendForDriver_2BB92967)(int a1);
@@ -92,9 +94,6 @@ int k_psvident_sysroot_GetBatteryVersion(unsigned long long int *hwinfo, unsigne
 int psvident_pervasive_GetSoCRevision(unsigned int *soc);
 int k_psvident_pervasive_GetSoCRevision(unsigned int *soc);
 
-int psvident_sysroot_DIPSwitches(uint8_t *string);
-int k_psvident_sysroot_DIPSwitches(uint8_t *string);
-
 int psvident_mbr_GetEmmcSize(unsigned int *var);
 int k_psvident_mbr_GetEmmcSize(unsigned int *var);
 
@@ -104,6 +103,11 @@ int k_psvident_sysroot_GetDipSwitches(uint8_t *string);
 int psvident_nvs_GetKibanId(uint8_t *string);
 int k_psvident_nvs_GetKibanId(uint8_t *string);
 
+int psvident_GetActivationStatus(void);
+int k_psvident_GetActivationStatus(void);
+
+int psvident_nvs_GetActData(uint8_t *string);
+int k_psvident_nvs_GetActData(uint8_t *string);
 
 ////////////////////////////////////////
 

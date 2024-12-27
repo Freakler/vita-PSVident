@@ -18,7 +18,7 @@
 #include "print/pspdebug.h"
 
 
-#define VERSION "v0.43"
+#define VERSION "v0.44"
 #define APP_PATH "ux0:app/PSVIDENT0/"
 
 int censored = 0;
@@ -819,22 +819,30 @@ void activation() {
 	/// DEV ///////////////////////////////////////////	
 	
 	if( vshSblAimgrIsDEX() || vshSblAimgrIsTool() ) { // Development Hardware
-		y += 1;	
+		y += 2;	
 	
+		/// Activation Status
+		psvDebugScreenSetXY(x1, y);
+		psvDebugScreenSetTextColor(WHITE);
+		psvDebugScreenPrintf("Activation Status:");
+		psvDebugScreenSetXY(x2, y);
+		psvDebugScreenPrintf("%s", getActivationStatus());
+		y += 2;
+		
 		/// Activation Period
 		psvDebugScreenSetXY(x1, y);
 		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("Activation Period:");
 		psvDebugScreenSetXY(x2, y);
-		psvDebugScreenPrintf("%s", getActivationPeriod());
+		psvDebugScreenPrintf("%s", getActivationPeriodNvs()); // getActivationPeriodDat()
 		y += 2;
 		
-		/// Activation Count
+		/// Activation Count (Issue No)
 		psvDebugScreenSetXY(x1, y);
 		psvDebugScreenSetTextColor(WHITE);
 		psvDebugScreenPrintf("Activation Count:");
 		psvDebugScreenSetXY(x2, y);
-		psvDebugScreenPrintf("%s", getActivationCount());
+		psvDebugScreenPrintf("%s", getActivationCountNvs()); // getActivationCountDat()
 		y += 2;
 
 		
@@ -1027,8 +1035,11 @@ void savereport(char *file) {
 	logPrintf(file, "Country Code: %s", getRegistryCountry());
 	logPrintf(file, "Language: %s", getRegistryLanguage());
 	if( vshSblAimgrIsDEX() || vshSblAimgrIsTool() ) { // Development Hardware
-	logPrintf(file, "Activation Period: %s", getActivationPeriod());
-	logPrintf(file, "Activation Count: %s", getActivationCount());
+	logPrintf(file, "Activation Status: %s", getActivationStatus());
+	logPrintf(file, "Activation Period (NVS): %s", getActivationPeriodNvs());
+	logPrintf(file, "Activation Period (act.dat): %s", getActivationPeriodDat());
+	logPrintf(file, "Activation Count (NVS): %s", getActivationCountNvs());
+	logPrintf(file, "Activation Count (act.dat): %s", getActivationCountDat());
 	}
 	logPrintf(file, "\n");
 	

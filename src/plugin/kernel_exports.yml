@@ -19,9 +19,10 @@ psvident_kernel:
         - k_psvident_sysroot_GetBootTypeIndicator
         - k_psvident_sysroot_GetBatteryVersion
         - k_psvident_pervasive_GetSoCRevision
-        - k_psvident_sysroot_DIPSwitches
         - k_psvident_mbr_GetEmmcSize
         - k_psvident_sysroot_GetDipSwitches
         - k_psvident_nvs_GetKibanId
         - k_psvident_syscon_GetTouchpanelDeviceInfo
         - k_psvident_syscon_GetTouchpanelDeviceInfo2
+        - k_psvident_GetActivationStatus
+        - k_psvident_nvs_GetActData

@@ -57,7 +57,7 @@ char *getCpInfo() {
 	
 	
 	if( kernmode ) { // helper plugins available
-		ret = psvident_sysroot_DIPSwitches(buf);
+		ret = psvident_sysroot_GetDipSwitches(buf);
 		if( ret != 0 )
 			return error(ret, "ERROR");
 	} else return "";
@@ -110,7 +110,7 @@ char *getCpTimestamp() {
 	uint8_t buf[0x20];
 	
 	if( kernmode ) { // helper plugins available
-		ret = psvident_sysroot_DIPSwitches(buf);
+		ret = psvident_sysroot_GetDipSwitches(buf);
 		if( ret != 0 )
 			return error(ret, "ERROR");
 	} else return "";
@@ -189,7 +189,7 @@ char *getCpboard() {
 	uint8_t buf[0x20];
 	
 	if( kernmode ) { // helper plugins available
-		ret = psvident_sysroot_DIPSwitches(buf);
+		ret = psvident_sysroot_GetDipSwitches(buf);
 		if( ret != 0 )
 			return error(ret, "ERROR");
 	} else return "";
@@ -1243,7 +1243,57 @@ char *getRegistryDateOfBirth() {
 	return string;
 }
 
-char *getActivationPeriod() { // from act.dat
+char *getActivationStatus() { 
+	int ret = -1;
+	static char string[32];
+	
+	ret = psvident_GetActivationStatus();
+	switch(ret) {
+		case -1: sprintf(string, "Not initialized"); break;
+		case 0: sprintf(string, "Activated"); break;
+		case 1: sprintf(string, "Expired"); break;
+		case 2: sprintf(string, "RTC battery failure"); break;			
+		default: return error(ret, "ERROR");
+	}
+	return string;
+}
+
+char *getActivationPeriodNvs() { // from NVS
+	int ret = -1;
+	static char string[64];
+	
+	int nvs_act_start = -1;
+	int nvs_act_end = -1;
+
+	uint8_t nvs[0x21];
+	memset(nvs, 0, 0x21);
+	
+	if( kernmode ) { // helper plugins available
+		ret = psvident_nvs_GetActData(nvs);
+		if( ret < 0 )
+			return error(ret, "ERROR");
+	} else return "";
+	
+	
+	if( nvs[0] == 'a' && nvs[1] == 'c' && nvs[2] == 't' ) {
+		nvs_act_end   = *(int *)(nvs + 0x8);
+		nvs_act_start = *(int *)(nvs + 0xC);
+	} else return error(-1, "ERROR");
+
+	if( nicemode ) {
+		SceDateTime start, end;
+		sceRtcConvertTime_tToDateTime(nvs_act_start, &start);
+		sceRtcConvertTime_tToDateTime(nvs_act_end, &end);
+		sprintf(string, "%04d/%02d/%02d %02d:%02d to %04d/%02d/%02d %02d:%02d", sceRtcGetYear(&start), sceRtcGetMonth(&start), sceRtcGetDay(&start), sceRtcGetHour(&start), sceRtcGetMinute(&start), sceRtcGetYear(&end), sceRtcGetMonth(&end), sceRtcGetDay(&end), sceRtcGetHour(&end), sceRtcGetMinute(&end));
+	
+	} else {
+		sprintf(string, "0x%08X to 0x%08X", nvs_act_start, nvs_act_end);
+	}
+	
+	return string;
+}
+
+char *getActivationPeriodDat() { // from act.dat
 	SceUID fd;
 	static char string[64];
 	char buf[0x100];
@@ -1270,7 +1320,31 @@ char *getActivationPeriod() { // from act.dat
 	return string;
 }
 
-char *getActivationCount() { // from act.dat
+char *getActivationCountNvs() { // from NVS
+	int ret = -1;
+	static char string[64];
+	
+	int nvs_act_count = -1;
+
+	uint8_t nvs[0x21];
+	memset(nvs, 0, 0x21);
+	
+	if( kernmode ) { // helper plugins available
+		ret = psvident_nvs_GetActData(nvs);
+		if( ret < 0 )
+			return error(ret, "ERROR");
+	} else return "";
+	
+	if( nvs[0] == 'a' && nvs[1] == 'c' && nvs[2] == 't' ) {
+		nvs_act_count = *(int *)(nvs + 0x4);
+	} else return error(-1, "ERROR");
+
+	sprintf(string, "%d", nvs_act_count);
+	
+	return string;
+}
+
+char *getActivationCountDat() { // from act.dat
 	SceUID fd;
 	static char string[16];
 	char buf[0x100];

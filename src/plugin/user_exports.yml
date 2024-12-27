@@ -17,10 +17,11 @@ psvident_user:
         - psvident_sysroot_GetHardwareFlags
         - psvident_sysroot_GetBootTypeIndicator
         - psvident_sysroot_GetBatteryVersion
+        - psvident_sysroot_GetDipSwitches
         - psvident_pervasive_GetSoCRevision
-        - psvident_sysroot_DIPSwitches
         - psvident_nvs_GetKibanId
         - psvident_mbr_GetEmmcSize
-        - psvident_sysroot_GetDipSwitches
         - psvident_syscon_GetTouchpanelDeviceInfo
         - psvident_syscon_GetTouchpanelDeviceInfo2
+        - psvident_GetActivationStatus
+        - psvident_nvs_GetActData
