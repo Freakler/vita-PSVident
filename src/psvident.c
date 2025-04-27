@@ -448,7 +448,7 @@ char *getConsoleID() {
 	return string;
 }
 
-char *getHardwareInfo() {
+char *getHardwareInfo() { // IDU mode can alter this!!
 	int ret = -1;
 	static char string[16];
 	unsigned char hwinfo[4];
@@ -461,6 +461,25 @@ char *getHardwareInfo() {
 	
 	if( nicemode ) 
 		sprintf(string, "%02X %02X %02X %02X", hwinfo[3], hwinfo[2], hwinfo[1], hwinfo[0]);
+	
+	return string;
+}
+
+char *getHardwareInfoViaIDStorage() { // via IDStorage
+	int ret = -1;
+	static char string[64];
+	static unsigned char buf[0x200];
+	
+	ret = vshIdStorageReadLeaf(0x103, buf);
+	if( ret != 0 && ret != 0x80230005) 
+		return error(ret, "ERROR");
+	if( ret == 0x80230005) // no leaf
+		return error(ret, "NO LEAF");
+	
+	sprintf(string, "0x%02X%02X%02X%02X", buf[3], buf[2], buf[1], buf[0]);
+	
+	if( nicemode ) 
+		sprintf(string, "%02X %02X %02X %02X", buf[3], buf[2], buf[1], buf[0]);
 	
 	return string;
 }
@@ -1582,13 +1601,17 @@ char *getRefurbished() {
 	return "FALSE";
 }
 
-char *getTrueIdu() {
-	unsigned char hwinfo[4];
-	int ret = _vshSysconGetHardwareInfo(hwinfo);
-	if( ret != 0 ) 
-		return error(ret, "ERROR");
+char *getTrueIdu() { // this way of detecting may not be a thing after all. Hardware Info in IDStorage does NOT have the IDU flag!! (tested with small not for sale IDU) I need to do more tests but it looks like I'll have to remove this..
+	int ret = -1;
+	static unsigned char buf[0x200];
 	
-	if( hwinfo[0] >> 4 == 0x8 ) {
+	ret = vshIdStorageReadLeaf(0x103, buf); // IDU mode actually alters hardware info! So we need to read hardware info from idstorage and NOT via vshSysconGetHardwareInfo
+	if( ret != 0 && ret != 0x80230005) 
+		return error(ret, "ERROR");
+	if( ret == 0x80230005) // no leaf
+		return error(ret, "NO LEAF");
+	
+	if( buf[0] >> 4 == 0x8 ) {
 		return "TRUE";
 	}
 	return "FALSE";

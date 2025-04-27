@@ -137,6 +137,7 @@ void hardware() {
 	psvDebugScreenPrintf("Hardware Info:");
 	psvDebugScreenSetXY(x2, y);
 	psvDebugScreenPrintf("%s", getHardwareInfo());
+	//psvDebugScreenPrintf(" vs %s", getHardwareInfoViaIDStorage()); // like it was at factory
 	y += 2;
 		
 
@@ -568,12 +569,12 @@ void miscellaneous() {
 	y += 2;	
 	
 	/// Real / True / Factory IDU
-	psvDebugScreenSetXY(x1, y);
+	/* psvDebugScreenSetXY(x1, y);
 	psvDebugScreenSetTextColor(WHITE);
 	psvDebugScreenPrintf("Factory IDU:");
 	psvDebugScreenSetXY(x2, y);
 	psvDebugScreenPrintf("%s", getTrueIdu());
-	y += 2;	
+	y += 2;	*/
 	
 	/// CP Timestamp
 	if( vshSblAimgrIsTool() ) { // DEVKIT
@@ -1058,7 +1059,7 @@ void savereport(char *file) {
 	logPrintf(file, "Enter Button: %s", getEnterButton());
 	logPrintf(file, "Auto AVLS: %s", getAutoAvls());
 	logPrintf(file, "Refurbished: %s", getRefurbished());
-	logPrintf(file, "Factory IDU: %s", getTrueIdu());
+	//logPrintf(file, "Factory IDU: %s", getTrueIdu());
 	if( vshSblAimgrIsTool() ) { // DEVKIT
 	logPrintf(file, "CP Timestamp: %s", getCpTimestamp());
 	}

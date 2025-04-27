@@ -30,6 +30,7 @@ char *getModelCode();
 char *getSerial();
 char *getConsoleID();
 char *getHardwareInfo();
+char *getHardwareInfoViaIDStorage();
 char *getMacAddressWifi();
 char *getMacAddressLan();
 char *getFactoryFirmware();
