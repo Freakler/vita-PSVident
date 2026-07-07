@@ -9,7 +9,7 @@ TRIANGLE - Raw Values Mode <br>
 CIRCLE -Reset <br>
 RIGHT - Next Page <br>
 LEFT - Previous Page <br>
-DOWN - Save Report ("ux0:data/psvident_XXXXXX.txt") <br>
+DOWN - (hold for 2s) Save Report ("ux0:data/psvident_XXXXXX.txt") <br>
 
 ## Screenshots
 ![ref0](https://github.com/Freakler/vita-PSVident/blob/main/psvident_000.png)
