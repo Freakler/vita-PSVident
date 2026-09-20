@@ -144,3 +144,75 @@ unsigned char msx[]=
 
 
 
+#include <stdint.h>
+#include <stddef.h>
+
+#define MSX_FONT_GLYPHS 256
+#define MSX_FONT8_HEIGHT 8
+#define MSX_FONT16_HEIGHT 16
+
+uint16_t msx16[MSX_FONT_GLYPHS][MSX_FONT16_HEIGHT];
+
+static int msx16_initialized = 0;
+
+static uint16_t expand_msx_row(uint8_t source_row) {
+    uint16_t destination_row = 0;
+    int x;
+
+    for (x = 0; x < 8; x++) {
+        if (source_row & ((uint8_t)0x80U >> x)) {
+            destination_row |= (uint16_t)((uint16_t)0xC000U >> (x * 2));
+        }
+    }
+
+    return destination_row;
+}
+
+void msxFontInit16(void) {
+    int character;
+    int source_y;
+
+    if (msx16_initialized) {
+        return;
+    }
+
+    for (character = 0; character < MSX_FONT_GLYPHS; character++) {
+        for (source_y = 0; source_y < MSX_FONT8_HEIGHT; source_y++) {
+            uint8_t source_row;
+            uint16_t destination_row;
+
+            source_row = msx[(character * MSX_FONT8_HEIGHT) + source_y];
+
+            destination_row = expand_msx_row(source_row);
+
+            msx16[character][source_y * 2] = destination_row;
+            msx16[character][source_y * 2 + 1] = destination_row;
+        }
+    }
+
+    /*
+     * Native 16x16 five-point star.
+     *
+     * This replaces glyph 0x80. Unlike the other glyphs, this star
+     * uses native 16x16 detail and is not based on an 8x8 image.
+     */
+
+    msx16[0x80][0]  = 0x0000; /* ................ */
+    msx16[0x80][1]  = 0x0180; /* .......##....... */
+    msx16[0x80][2]  = 0x0180; /* .......##....... */
+    msx16[0x80][3]  = 0x03C0; /* ......####...... */
+    msx16[0x80][4]  = 0x03C0; /* ......####...... */
+    msx16[0x80][5]  = 0x7FFE; /* .##############. */
+    msx16[0x80][6]  = 0x3FFC; /* ..############.. */
+    msx16[0x80][7]  = 0x1FF8; /* ...##########... */
+    msx16[0x80][8]  = 0x0FF0; /* ....########.... */
+    msx16[0x80][9]  = 0x07E0; /* .....######..... */
+    msx16[0x80][10] = 0x07E0; /* .....######..... */
+    msx16[0x80][11] = 0x0E70; /* ....###..###.... */
+    msx16[0x80][12] = 0x1C38; /* ...###....###... */
+    msx16[0x80][13] = 0x1818; /* ...##......##... */
+    msx16[0x80][14] = 0x0000; /* ................ */
+    msx16[0x80][15] = 0x0000; /* ................ */
+
+    msx16_initialized = 1;
+}

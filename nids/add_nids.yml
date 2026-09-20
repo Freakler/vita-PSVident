@@ -1,12 +1,12 @@
 modules:
-  SceSblSsMgr:
-    nid: 0x4E913538
-    libraries:
-      SceSblQafMgr:
-        kernel: false
-        nid: 0x756B7E89 
-        functions:
-          sceSblQafManagerGetQafNameForUser: 0x0F7EA8C2
+  #SceSblSsMgr:
+  #  nid: 0x4E913538
+  #  libraries:
+  #    SceSblQafMgr:
+  #      kernel: false
+  #      nid: 0x756B7E89 
+  #      functions:
+  #        sceSblQafManagerGetQafNameForUser: 0x0F7EA8C2
   SceSyscon:
     nid: 0x5358BA05
     libraries:
@@ -19,3 +19,11 @@ modules:
           ksceSysconGetBaryonVersion: 0xFF86F4C5
           ksceSysconGetBaryonTimestamp: 0x4D588A0A
           ksceSysconGetBatteryVersion: 0x68E0031E
+  #SceSysmem:
+  #  nid: 0x3380B323
+  #  libraries:
+  #    SceDipsw:
+  #      kernel: false
+  #      nid: 0xB36D5922
+  #      functions:
+  #        sceKernelCheckDipsw: 0x1C783FB2        

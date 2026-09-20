@@ -14,12 +14,12 @@ endif()
 project(PSVident)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 set(VITA_APP_NAME "PSVident")
-set(VITA_TITLEID  "PSVIDENT0")
+set(VITA_TITLEID  "PSVIDENT0") #PSP2IDENT
 set(VITA_VERSION  "01.00")
 
 
 # Flags and includes
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-format-truncation -fno-lto")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall -Wno-pointer-sign -Wno-format-truncation -fno-lto")  # -Wno-unused-variable -Wno-unused-but-set-variable
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c+ + 11 -fno-rtti -fno-exceptions")
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
 set(VITA_MAKE_FSELF_FLAGS "${VITA_MAKE_FSELF_FLAGS} -a 0x2808000000000000")
@@ -54,7 +54,7 @@ target_link_libraries(${PROJECT_NAME}
   SceNet_stub
   SceNetCtl_stub
   SceRtc_stub
-  SceApputil_stub
+  SceAppUtil_stub
   SceSysmem_stub
   ScePower_stub
   SceRegistryMgr_stub
@@ -63,6 +63,9 @@ target_link_libraries(${PROJECT_NAME}
   SceSblSsMgr_stub
   SceNotificationUtil_stub
   SceMotionDev_stub
+  SceCompat_stub
+  SceUdcd_stub
+  ScePerf_stub 
   taihen_stub
   psvident_user_stub_weak
 )
@@ -94,6 +97,10 @@ target_link_libraries(${PROJECT_NAME}_kernel
   SceSysconForDriver_stub
   ScePervasiveForDriver_stub
   SceKernelSuspendForDriver_stub
+  SceSblPostSsMgrForDriver_stub
+  SceBtForDriver_stub
+  SceDipswForDriver_stub
+  SceSdifForDriver_stub
   taihenForKernel_stub
   taihenModuleUtils_stub
 )
@@ -143,7 +150,7 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
     FILE livearea/template.xml sce_sys/livearea/contents/template.xml
 )
 
-set(VITA_IP  "192.168.178.28")
+set(VITA_IP  "192.168.178.25")
 
 add_custom_target(vpksend
 	COMMAND curl -T ${PROJECT_NAME}.vpk ftp://${VITA_IP}:1337/ux0:/VPK/

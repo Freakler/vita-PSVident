@@ -2,27 +2,27 @@ psvident_kernel:
   attributes: 0
   version:
     major: 1
-    minor: 0
+    minor: 2
   main:
     start: module_start
     stop: module_stop
-  modules:
+  libraries:
     psvident_kernel:
       syscall: true
       functions:
         - k_psvident_syscon_GetBaryonVersion
         - k_psvident_syscon_GetBaryonTimestamp
-        - k_psvident_sysroot_GetBootloaderRevision
-        - k_psvident_sysroot_GetQAFlags
-        - k_psvident_sysroot_GetBootFlags
-        - k_psvident_sysroot_GetHardwareFlags
-        - k_psvident_sysroot_GetBootTypeIndicator
-        - k_psvident_sysroot_GetBatteryVersion
-        - k_psvident_pervasive_GetSoCRevision
-        - k_psvident_mbr_GetEmmcSize
-        - k_psvident_sysroot_GetDipSwitches
-        - k_psvident_nvs_GetKibanId
         - k_psvident_syscon_GetTouchpanelDeviceInfo
         - k_psvident_syscon_GetTouchpanelDeviceInfo2
+        - k_psvident_sysroot_GetBatteryVersion
+        - k_psvident_pervasive_GetSoCRevision
+        - k_psvident_mbr_Get
+        - k_psvident_mbr_CheckEnso
+        - k_psvident_mbr_CheckPreviousEnso
         - k_psvident_GetActivationStatus
-        - k_psvident_nvs_GetActData
+        - k_psvident_nvs_Get
+        - k_psvident_BtGetRegisteredInfo
+        - k_psvident_kblparam_GetBuffer
+        - k_psvident_sdifgetcontextmmc
+        - k_psvident_detect_plugins
+        - k_psvident_test
