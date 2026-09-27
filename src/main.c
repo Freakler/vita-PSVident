@@ -18,7 +18,7 @@
 #include "print/pspdebug.h"
 
 
-#define VERSION "v1.00"
+#define VERSION "v1.01"
 #define APP_PATH "ux0:app/PSVIDENT0/" // "PSP2IDENT"
 
 
@@ -4750,7 +4750,7 @@ void summary() {
       ret = getSoCRevision(retstr, &rawval);
       if( ret >= 0 && rawval == 0x80000115 ) {
         psvDebugScreenSetXY(x1, y);
-        psvDebugScreenPrintf("This Unit has the newer and more energy-efficient slim SoC!");
+        psvDebugScreenPrintf("This Unit has the newer and more energy-efficient SoC!");
         y += 2;  
       }
     }
@@ -4875,9 +4875,76 @@ void summary() {
   if( ret >= 0 && ret2 >= 0 && rawval < rawval2 ) { 
     psvDebugScreenSetXY(x1 + 1, y);
     psvDebugScreenPrintf("- The firmware has been downgraded!");
-    y += 2;  
+    y += 2;
   }
 
+
+  /// Target Build check
+  ret = getTarget(1, retstr, &rawval); // via IDStorage
+  memset(retstr2, 0, 256);
+  sprintf(retstr2, getVersionTxtStringValueForKey("build"));
+  if( ret >= 0 && strcmp(retstr2, "ERROR") != 0 ) {
+    switch(rawval) {
+      case 0x100: break; // TEST
+
+      case 0x101: // Devkit "TOOL"
+        if( strcmp(retstr2, "CEX_FOR_TOOL") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A CEX_FOR_TOOL Firmware is installed!"); // which is "normal"
+          y += 2;
+        }
+        if( strcmp(retstr2, "TOOL_HIDE_LATEST") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A TOOL_HIDE_LATEST Firmware is installed!"); // which was only found once at 1.80
+          y += 2;
+        }
+        if( strcmp(retstr2, "CEX") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A CEX Firmware is installed on TOOL device target!");
+          y += 2;
+        }
+        if( strcmp(retstr2, "DEX") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A DEX Firmware is installed on TOOL device target!");
+          y += 2;
+        }
+        break; 
+
+      case 0x102: // Testkit "DEX"
+        if( strcmp(retstr2, "CEX") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A CEX Firmware is installed on DEX device target!");
+          y += 2;
+        }
+        if( strcmp(retstr2, "TOOL") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A TOOL Firmware is installed on DEX device target!");
+          y += 2;
+        }
+        break; 
+  
+      case 0x103:  case 0x104:  case 0x105:  case 0x106:
+      case 0x107:  case 0x108: case 0x109:  case 0x10A:
+      case 0x10B:  case 0x10C:  case 0x10D:  case 0x10E:
+      case 0x10F:  case 0x110:  case 0x111: // Retail "CEX"
+        if( strcmp(retstr2, "DEX") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A DEX Firmware is installed on CEX device target!");
+          y += 2;
+        }
+        if( strcmp(retstr2, "TOOL") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A TOOL Firmware is installed on CEX device target!");
+          y += 2;
+        }
+        if( strcmp(retstr2, "CEX_FOR_TOOL") == 0 ) {
+          psvDebugScreenSetXY(x1 + 1, y);
+          psvDebugScreenPrintf("- A CEX_FOR_TOOL Firmware is installed on CEX device target!");
+          y += 2;
+        }
+        break;
+    }
+  }
 
 
   if( vshSblAimgrIsDEX() == 1 || vshSblAimgrIsTool() == 1 ) { // Development Hardware
@@ -5552,6 +5619,55 @@ int savereport(char *file) {
       logPrintf(file, "- The firmware has been downgraded!");
     }
 
+    /// Target Build check
+    ret = getTarget(1, retstr, &rawval); // via IDStorage
+    memset(retstr2, 0, 256);
+    sprintf(retstr2, getVersionTxtStringValueForKey("build"));
+    if( ret >= 0 && strcmp(retstr2, "ERROR") != 0 ) {
+      switch(rawval) {
+        case 0x100: break; // TEST
+
+        case 0x101: // Devkit "TOOL"
+          if( strcmp(retstr2, "CEX_FOR_TOOL") == 0 ) {
+            logPrintf(file, "- A CEX_FOR_TOOL Firmware is installed!"); // which is "normal"
+          }
+          if( strcmp(retstr2, "TOOL_HIDE_LATEST") == 0 ) {
+            logPrintf(file, "- A TOOL_HIDE_LATEST Firmware is installed!"); // which was only found once at 1.80
+          }
+          if( strcmp(retstr2, "CEX") == 0 ) {
+            logPrintf(file, "- A CEX Firmware is installed on TOOL device target!");
+          }
+          if( strcmp(retstr2, "DEX") == 0 ) {
+            logPrintf(file, "- A DEX Firmware is installed on TOOL device target!");
+          }
+          break; 
+
+        case 0x102: // Testkit "DEX"
+          if( strcmp(retstr2, "CEX") == 0 ) {
+            logPrintf(file, "- A CEX Firmware is installed on DEX device target!");
+          }
+          if( strcmp(retstr2, "TOOL") == 0 ) {
+            logPrintf(file, "- A TOOL Firmware is installed on DEX device target!");
+          }
+          break; 
+    
+        case 0x103:  case 0x104:  case 0x105:  case 0x106:
+        case 0x107:  case 0x108: case 0x109:  case 0x10A:
+        case 0x10B:  case 0x10C:  case 0x10D:  case 0x10E:
+        case 0x10F:  case 0x110:  case 0x111: // Retail "CEX"
+          if( strcmp(retstr2, "DEX") == 0 ) {
+            logPrintf(file, "- A DEX Firmware is installed on CEX device target!");
+          }
+          if( strcmp(retstr2, "TOOL") == 0 ) {
+            logPrintf(file, "- A TOOL Firmware is installed on CEX device target!");
+          }
+          if( strcmp(retstr2, "CEX_FOR_TOOL") == 0 ) {
+            logPrintf(file, "- A CEX_FOR_TOOL Firmware is installed on CEX device target!");
+          }
+          break;
+      }
+    }
+    
 
     if( vshSblAimgrIsDEX() == 1 || vshSblAimgrIsTool() == 1 ) { // Development Hardware
 
