@@ -15,7 +15,7 @@ project(PSVident)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 set(VITA_APP_NAME "PSVident")
 set(VITA_TITLEID  "PSVIDENT0") #PSP2IDENT
-set(VITA_VERSION  "01.00")
+set(VITA_VERSION  "01.01")
 
 
 # Flags and includes
