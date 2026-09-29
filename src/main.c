@@ -5019,7 +5019,7 @@ void summary() {
       y += 2;  
     }
 
-    if( ux0blocks > 0 && ux0blocks != 0x208000  && ux0blocks != 0x21A000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC
+    if( ux0blocks > 0 && ux0blocks != 0x208000 && ux0blocks != 0x21A000 && ux0blocks != 0x1EE000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC (maybe make it a range instead?!) 0x1EE000 seen on CPV proto
       psvDebugScreenSetXY(x1 + 1, y);
       psvDebugScreenPrintf("- The internal memorycard partition has been resized!");
       y += 2;  
