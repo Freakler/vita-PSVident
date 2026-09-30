@@ -5019,7 +5019,7 @@ void summary() {
       y += 2;  
     }
 
-    if( ux0blocks > 0 && ux0blocks != 0x208000 && ux0blocks != 0x21A000 && ux0blocks != 0x1EE000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC (0x1EE000 seen on CPV proto)
+    if( ux0blocks > 0 && ux0blocks != 0x208000 && ux0blocks != 0x21A000 && ux0blocks != 0x1EE000 && ux0blocks != 0x260000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC (0x1EE000 & 0x260000 seen on CPV proto)
       psvDebugScreenSetXY(x1 + 1, y);
       psvDebugScreenPrintf("- The internal memorycard partition has been resized!");
       y += 2;  
@@ -5714,7 +5714,7 @@ int savereport(char *file) {
         logPrintf(file, "- The ur0: partition has been resized!");
       }
 
-      if( ux0blocks > 0 && ux0blocks != 0x208000  && ux0blocks != 0x21A000 && ux0blocks != 0x1EE000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC (0x1EE000 seen on CPV proto)
+      if( ux0blocks > 0 && ux0blocks != 0x208000  && ux0blocks != 0x21A000 && ux0blocks != 0x1EE000 && ux0blocks != 0x260000 ) { // known slim/pstv size https://wiki.henkaku.xyz/vita/EMMC (0x1EE000 & 0x260000 seen on CPV proto)
         logPrintf(file, "- The internal memorycard partition has been resized!");
       }
 
